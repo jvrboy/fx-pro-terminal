@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  avatar    String?
+  role      String   @default("trader")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages  ChatMessage[]
+  signals   TradingSignal[]
+  trades    TradeHistory[]
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  content   String
+  channelId String   @default("general")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model TradingSignal {
+  id          String   @id @default(cuid())
+  userId      String
+  pair        String
+  direction   String
+  entryPrice  Float
+  stopLoss    Float
+  takeProfit  Float
+  timeframe   String   @default("H1")
+  status      String   @default("active")
+  confidence  Int      @default(75)
+  analysis    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model TradeHistory {
+  id            String   @id @default(cuid())
+  userId        String
+  pair          String
+  direction     String
+  entryPrice    Float
+  exitPrice     Float
+  stopLoss      Float
+  takeProfit    Float
+  lotSize       Float    @default(0.01)
+  profit        Float    @default(0)
+  pips          Float    @default(0)
+  status        String   @default("closed")
+  timeframe     String   @default("H1")
+  openedAt      DateTime @default(now())
+  closedAt      DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model AppSettings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EconomicEvent {
+  id          String   @id @default(cuid())
+  eventDate   DateTime
+  currency    String
+  impact      String   @default("medium")
+  title       String
+  description String?
+  actual      String?
+  forecast    String?
+  previous    String?
+  category    String   @default("economic")
+  source      String   @default("auto")
+  status      String   @default("upcoming")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AgentMemory {
+  id            String   @id @default(cuid())
+  sessionId     String
+  agentType     String
+  signalId      String?
+  eventType     String
+  context       String
+  analysis      String
+  outcome       String
+  lessonsLearned String
+  accuracyScore Float   @default(0)
+  tags          String   @default("")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model SignalAnalysis {
+  id              String   @id @default(cuid())
+  signalId        String   @unique
+  pair            String
+  direction       String
+  entryPrice      Float
+  stopLoss        Float
+  takeProfit      Float
+  originalConfidence Int  @default(75)
+  adjustedConfidence Int  @default(75)
+  hitStopLoss     Boolean  @default(false)
+  hitTakeProfit   Boolean  @default(false)
+  slReason        String?
+  marketCondition String?
+  volatility      String   @default("normal")
+  sessionType     String   @default("london")
+  errorMargin     Float    @default(0)
+  improvementNotes String?
+  status          String   @default("analyzing")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
